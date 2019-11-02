@@ -2,6 +2,7 @@
 #include <stdlib.h> // malloc, free
 #include <limits.h> // INT_MAX, UINT_MAX
 
+#include "debug.h"
 #include "lexer.h"
 
 namespace glsl {
@@ -243,9 +244,10 @@ void lexer::read(token &out) {
         case '\r':
         case ' ':
             while (position() < m_length && isSpace(at())) {
-                if (at() == '\n')
+                if (at() == '\n') {
                     m_location.advanceLine();
-                else
+					debug::inst().setLine(m_location.line);
+				} else
                     m_location.advanceColumn();
             }
             out.m_type = kType_whitespace; // Whitespace already skippped
@@ -292,6 +294,7 @@ void lexer::read(token &out) {
                 while (position() != m_length) {
                     if (at() == '\n') {
                         m_location.advanceLine();
+						debug::inst().setLine(m_location.line);
                         break;
                     }
                     m_location.advanceColumn();
@@ -302,6 +305,7 @@ void lexer::read(token &out) {
                 while (position() != m_length) {
                     if (at() == '\n') {
                         m_location.advanceLine();
+						debug::inst().setLine(m_location.line);
                         continue;
                     }
                     if (at() == '*' && position() + 1 < m_length && m_data[position() + 1] == '/') {

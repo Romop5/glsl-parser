@@ -3,6 +3,8 @@
 #include "parser.h"
 #include "util.h"
 
+static int curLine; // I know... was too lazy to do some extreme modifications
+
 namespace glsl {
 
 parser::parser(const char *source, const char *fileName)

@@ -2,6 +2,7 @@
 #define AST_HDR
 #include <stdlib.h> // free, malloc, size_t
 #include "util.h"
+#include "debug.h"
 
 namespace glsl {
 
@@ -32,7 +33,13 @@ struct astNode {
             collector->push_back(astMemory((T*)data));
         return data;
     }
-private:
+
+	int line;
+	astNode() {
+		line = debug::inst().getLine();
+	}
+
+//private:
     void *operator new(size_t);
     void operator delete(void *);
 };

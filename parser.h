@@ -1,5 +1,6 @@
 #ifndef PARSE_HDR
 #define PARSE_HDR
+#include <string.h>
 #include "lexer.h"
 #include "ast.h"
 
