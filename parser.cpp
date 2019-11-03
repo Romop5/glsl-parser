@@ -948,8 +948,8 @@ CHECK_RETURN astExpression *parser::parseUnaryPrefix(endCondition condition) {
         } else {
             astVariable *find = findVariable(m_token.asIdentifier);
             if (find)
-                return GC_NEW(astExpression) astVariableIdentifier(find);
-            fatal("`%s' was not declared in this scope", m_token.asIdentifier);
+				return GC_NEW(astExpression) astVariableIdentifier(find);
+			fatal("`%s' was not declared in this scope", m_token.asIdentifier);
             return 0;
         }
     } else if (isKeyword(kKeyword_true)) {
@@ -1009,22 +1009,26 @@ CHECK_RETURN astExpression *parser::parseUnary(endCondition end) {
             }
             astFieldOrSwizzle *expression = GC_NEW(astExpression) astFieldOrSwizzle();
             // check to see if the field exists
-            if (((astType*)operand)->builtin) {
-                astStruct *type = (astStruct*)getType(operand);
-                if (type) {
-                    astVariable *field = 0;
-                    for (size_t i = 0; i < type->fields.size(); i++) {
-                        if (strcmp(type->fields[i]->name, m_token.asIdentifier))
-                            continue;
-                        field = type->fields[i];
-                        break;
-                    }
-                    if (!field) {
-                        fatal("field `%s' does not exist in structure `%s'", m_token.asIdentifier, type->name);
-                        return 0;
-                    }
-                }
-            }
+			
+			if (operand->type == astExpression::kVariableIdentifier) {
+				if (!((astVariableIdentifier*)operand)->variable->baseType->builtin) {
+					astStruct *type = (astStruct*)getType(operand);
+					if (type) {
+						astVariable *field = 0;
+						for (size_t i = 0; i < type->fields.size(); i++) {
+							if (strcmp(type->fields[i]->name, m_token.asIdentifier))
+								continue;
+							field = type->fields[i];
+							break;
+						}
+						if (!field) {
+							fatal("field `%s' does not exist in structure `%s'", m_token.asIdentifier, type->name);
+							return 0;
+						}
+					}
+				}
+			}
+
             expression->operand = operand;
             expression->name = strnew(m_token.asIdentifier);
             operand = expression;
