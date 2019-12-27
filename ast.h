@@ -38,10 +38,6 @@ struct astNode {
 	astNode() {
 		line = debug::inst().getLine();
 	}
-
-//private:
-    void *operator new(size_t);
-    void operator delete(void *);
 };
 
 

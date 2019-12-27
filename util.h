@@ -21,6 +21,7 @@ int allocvfmt(char **str, const char *fmt, va_list vp);
 int allocfmt(char **str, const char *fmt, ...);
 
 // a tiny wrapper around std::vector so you can provide your own
+/*
 template <typename T>
 struct vector {
     size_t size() const { return m_data.size(); }
@@ -46,6 +47,10 @@ struct vector {
 private:
     std::vector<T> m_data;
 };
+*/
+
+template <typename T>
+using vector = std::vector<T>;
 
 }
 
