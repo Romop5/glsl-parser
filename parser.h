@@ -130,11 +130,16 @@ protected:
 
     astBinaryExpression *createExpression();
 
+    void addGlobal(const char* name, int type);
+
     astType *findType(const char *identifier);
     astVariable *findVariable(const char *identifier);
     astType* getType(astExpression *expression);
 private:
     typedef vector<astVariable *> scope;
+
+    scope m_toAddGlobal;
+    void m_addBuiltinVariables();
 
     astTU *m_ast;
     lexer m_lexer;

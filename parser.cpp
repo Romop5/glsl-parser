@@ -11,15 +11,12 @@ parser::parser(const char *source, const char *fileName)
     : m_lexer(source)
     , m_fileName(fileName)
 {
+    m_ast = nullptr;
     m_oom = strnew("Out of memory");
 }
 
 parser::~parser() {
-    delete m_ast;
-    for (size_t i = 0; i < m_strings.size(); i++)
-        free(m_strings[i]);
-    for (size_t i = 0; i < m_memory.size(); i++)
-        m_memory[i].destroy();
+    cleanup();
 }
 
 #define IS_TYPE(TOKEN, TYPE) \
@@ -301,10 +298,80 @@ bool parser::isBuiltin() const {
 #undef TYPENAME
 #define TYPENAME(...)
 
+void parser::cleanup()
+{
+    if (m_ast != nullptr)
+        delete m_ast;
+
+    for (size_t i = 0; i < m_strings.size(); i++)
+        free(m_strings[i]);
+    for (size_t i = 0; i < m_memory.size(); i++)
+        m_memory[i].destroy();
+
+    m_strings.clear();
+    m_memory.clear();
+    m_scopes.clear();
+}
+
+
+
+void parser::addGlobal(const char* name, int type)
+{
+    astGlobalVariable* global = GC_NEW(astVariable) astGlobalVariable();
+    global->storage = kIn;
+    global->auxiliary = kCentroid;
+    global->memory = kReadOnly | kWriteOnly; // random values
+    global->precision = kHighp;
+    global->interpolation = kSmooth;
+    global->initialValue = nullptr;
+
+    global->baseType = GC_NEW(astType) astBuiltin(type);
+    global->name = strnew(name);
+    global->isInvariant = false;
+    global->isPrecise = false;
+    global->layoutQualifiers.clear();
+
+    global->isArray = false;
+    global->arraySizes.clear();
+
+    m_toAddGlobal.push_back(global);
+}
+void parser::m_addBuiltinVariables()
+{
+    // vertex inputs
+    addGlobal("gl_VertexID", kKeyword_int);
+    addGlobal("gl_InstanceID", kKeyword_int);
+    addGlobal("gl_DrawID", kKeyword_int);
+    addGlobal("gl_BaseVertex", kKeyword_int);
+    addGlobal("gl_BaseInstance", kKeyword_int);
+
+    // vertex outputs
+    addGlobal("gl_Position", kKeyword_vec4);
+    addGlobal("gl_PointSize", kKeyword_float);
+
+    // fragment inputs
+    addGlobal("gl_FragCoord", kKeyword_vec4);
+    addGlobal("gl_FrontFacing", kKeyword_bool);
+    addGlobal("gl_PointCoord", kKeyword_vec2);
+
+    // fragment outputs
+    addGlobal("gl_FragDepth", kKeyword_float);
+}
+
 /// The parser entry point
 CHECK_RETURN astTU *parser::parse(int type) {
+    cleanup();
+
     m_ast = new astTU(type);
     m_scopes.push_back(scope());
+
+    m_addBuiltinVariables();
+
+    for (int i = 0; i < m_toAddGlobal.size(); i++)
+        m_scopes.back().push_back(m_toAddGlobal[i]);
+
+    m_toAddGlobal.clear();
+
     for (;;) {
         m_lexer.read(m_token, true);
 
