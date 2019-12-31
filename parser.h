@@ -50,12 +50,14 @@ struct topLevel {
 struct parser {
     ~parser();
     parser(const char *source, const char *fileName);
-    CHECK_RETURN astTU *parse(int type);
+    CHECK_RETURN astTU *parse(int type, bool ignoreUndefinedVariables = false);
 
     const char *error() const;
 
-protected:
+    void addGlobal(const char* name, int type, const char* typeName = "");
     void cleanup();
+
+protected:
 
     enum {
         kEndConditionSemicolon = 1 << 0,
@@ -129,8 +131,6 @@ protected:
     CHECK_RETURN astWhileStatement *parseWhileStatement();
 
     astBinaryExpression *createExpression();
-
-    void addGlobal(const char* name, int type);
 
     astType *findType(const char *identifier);
     astVariable *findVariable(const char *identifier);

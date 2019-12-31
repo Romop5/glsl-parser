@@ -315,7 +315,7 @@ void parser::cleanup()
 
 
 
-void parser::addGlobal(const char* name, int type)
+void parser::addGlobal(const char* name, int type, const char* typeName)
 {
     astGlobalVariable* global = GC_NEW(astVariable) astGlobalVariable();
     global->storage = kIn;
@@ -325,7 +325,16 @@ void parser::addGlobal(const char* name, int type)
     global->interpolation = kSmooth;
     global->initialValue = nullptr;
 
-    global->baseType = GC_NEW(astType) astBuiltin(type);
+    if (type != kKeyword_struct)
+        global->baseType = GC_NEW(astType) astBuiltin(type);
+    else {
+        astStruct* str = GC_NEW(astType) astStruct();
+        str->name = strnew(typeName);
+        m_ast->structures.push_back(str);
+
+        global->baseType = str;
+    }
+
     global->name = strnew(name);
     global->isInvariant = false;
     global->isPrecise = false;
@@ -359,9 +368,11 @@ void parser::m_addBuiltinVariables()
 }
 
 /// The parser entry point
-CHECK_RETURN astTU *parser::parse(int type) {
-    cleanup();
+CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
 
+    if (!ignoreUndefinedVariables)
+        cleanup();
+    
     m_ast = new astTU(type);
     m_scopes.push_back(scope());
 
