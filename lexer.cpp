@@ -246,7 +246,7 @@ void lexer::read(token &out) {
             while (position() < m_length && isSpace(at())) {
                 if (at() == '\n') {
                     m_location.advanceLine();
-					debug::inst().setLine(m_location.line);
+					debug::inst().advanceLine();
 				} else
                     m_location.advanceColumn();
             }
@@ -254,6 +254,10 @@ void lexer::read(token &out) {
             break;
         case ';':
             out.m_type = kType_semicolon;
+            m_location.advanceColumn();
+            break;
+        case '#':
+            out.m_type = kType_hash;
             m_location.advanceColumn();
             break;
         case '{':

@@ -10,6 +10,7 @@ TYPE(constant_float)
 TYPE(constant_double)
 TYPE(operator)
 TYPE(semicolon)
+TYPE(hash)
 TYPE(scope_begin)
 TYPE(scope_end)
 

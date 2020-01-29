@@ -3,8 +3,6 @@
 #include "parser.h"
 #include "util.h"
 
-static int curLine; // I know... was too lazy to do some extreme modifications
-
 namespace glsl {
 
 parser::parser(const char *source, const char *fileName)
@@ -367,6 +365,31 @@ void parser::m_addBuiltinVariables()
     addGlobal("gl_FragDepth", kKeyword_float);
 }
 
+bool parser::preprocess()
+{
+    // #line
+    if (isType(kType_hash)) {
+        if (!next())
+            return false;
+
+        char* idName = m_token.asIdentifier;
+
+        // #line <nr>
+        if (strcmp(idName, "line") == 0) {
+            if (!next())
+                return false;
+
+            if (isType(kType_constant_int))
+                debug::inst().setLine(m_token.asInt-1); // -1 since we will increase after the \n
+        }
+
+        if (!next())
+            return false;
+    }
+
+    return true;
+}
+
 /// The parser entry point
 CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
 
@@ -375,6 +398,7 @@ CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
     
     m_ast = new astTU(type);
     m_scopes.push_back(scope());
+    debug::inst().setLine(1);
 
     m_addBuiltinVariables();
 
@@ -394,10 +418,13 @@ CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
         if (isType(kType_eof))
             break;
 
+        if (!preprocess())
+            return 0;
+
         vector<topLevel> items;
         if (!parseTopLevel(items))
             return 0;
-
+        
         if (isType(kType_semicolon)) {
             for (size_t i = 0; i < items.size(); i++) {
                 topLevel &parse = items[i];
@@ -421,14 +448,17 @@ CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
                 m_ast->globals.push_back(global);
                 m_scopes.back().push_back(global);
             }
-        } else if (isOperator(kOperator_paranthesis_begin)) {
+        }
+        else if (isOperator(kOperator_paranthesis_begin)) {
             astFunction *function = parseFunction(items.front());
             if (!function)
                 return 0;
             m_ast->functions.push_back(function);
-        } else if (isType(kType_whitespace)) {
+        }
+        else if (isType(kType_whitespace)) {
             continue; // whitespace tokens will be used later for the preprocessor
-        } else {
+        }
+        else {
             fatal("syntax error at top level %d", m_token.asKeyword);
             return 0;
         }
@@ -1668,11 +1698,14 @@ CHECK_RETURN astFunction *parser::parseFunction(const topLevel &parse) {
             m_scopes.back().push_back(function->parameters[i]);
         while (!isType(kType_scope_end)) {
             astStatement *statement = parseStatement();
-            if (!statement)
-                return 0;
-            function->statements.push_back(statement);
-            if (!next())// skip ';'
-                return 0;
+            if (!statement) {
+                if (!preprocess())
+                    return 0;
+            } else {
+                function->statements.push_back(statement);
+                if (!next())// skip ';'
+                    return 0;
+            }
         }
 
         m_scopes.pop_back();

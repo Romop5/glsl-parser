@@ -15,6 +15,8 @@ namespace glsl
 		{
 			m_line = line;
 		}
+
+		inline void advanceLine() { m_line++; }
 		
 		inline int getLine()
 		{
