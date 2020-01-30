@@ -95,7 +95,7 @@ protected:
     void fatal(const char *fmt, ...);
 
     CHECK_RETURN astConstantExpression *evaluate(astExpression *expression);
-    bool preprocess();
+    int preprocess();
 
     // Type parsers
     astBuiltin *parseBuiltin();

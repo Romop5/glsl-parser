@@ -365,29 +365,29 @@ void parser::m_addBuiltinVariables()
     addGlobal("gl_FragDepth", kKeyword_float);
 }
 
-bool parser::preprocess()
+// 0 -> error, 1 -> nothing parsed, 2 -> all ok
+int parser::preprocess()
 {
     // #line
     if (isType(kType_hash)) {
         if (!next())
-            return false;
+            return 0;
 
         char* idName = m_token.asIdentifier;
 
         // #line <nr>
         if (strcmp(idName, "line") == 0) {
             if (!next())
-                return false;
+                return 0;
 
             if (isType(kType_constant_int))
                 debug::inst().setLine(m_token.asInt-1); // -1 since we will increase after the \n
         }
-
-        if (!next())
-            return false;
+        
+        return 2;
     }
 
-    return true;
+    return 1;
 }
 
 /// The parser entry point
@@ -418,8 +418,13 @@ CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
         if (isType(kType_eof))
             break;
 
-        if (!preprocess())
+        int ppRes = preprocess();
+        if (ppRes == 0)
             return 0;
+        else if (ppRes == 2) {
+            if (!next())
+                return 0;
+        }
 
         vector<topLevel> items;
         if (!parseTopLevel(items))
@@ -867,19 +872,14 @@ CHECK_RETURN bool parser::parseTopLevelItem(topLevel &level, topLevel *continuat
             return false;
     }
 
-    if (level.storage == kConst) {
-        // Can have a constant expression assignment
-        if (isOperator(kOperator_assign)) {
-            if (!next()) // skip '='
-                return false;
-            if (!(level.initialValue = parseExpression(kEndConditionSemicolon)))
-                return false;
-            if (!isConstant(level.initialValue)) {
-                fatal("not a valid constant expression");
-                return false;
-            }
-        } else {
-            fatal("const-qualified variable declared but not initialized");
+    // Can have a constant expression assignment
+    if (isOperator(kOperator_assign)) {
+        if (!next()) // skip '='
+            return false;
+        if (!(level.initialValue = parseExpression(kEndConditionSemicolon)))
+            return false;
+        if (!isConstant(level.initialValue)) {
+            fatal("not a valid constant expression");
             return false;
         }
     }
@@ -1591,6 +1591,8 @@ CHECK_RETURN astStatement *parser::parseStatement() {
         return parseReturnStatement();
     } else if (isType(kType_semicolon)) {
         return GC_NEW(astStatement) astEmptyStatement();
+    } else if (isType(kType_hash)) {
+        return ((preprocess() == 0) ? nullptr : (GC_NEW(astStatement) astEmptyStatement()));
     } else {
         return parseDeclarationOrExpressionStatement(kEndConditionSemicolon);
     }
@@ -1698,10 +1700,9 @@ CHECK_RETURN astFunction *parser::parseFunction(const topLevel &parse) {
             m_scopes.back().push_back(function->parameters[i]);
         while (!isType(kType_scope_end)) {
             astStatement *statement = parseStatement();
-            if (!statement) {
-                if (!preprocess())
-                    return 0;
-            } else {
+            if (!statement)
+                return 0;
+            else {
                 function->statements.push_back(statement);
                 if (!next())// skip ';'
                     return 0;
