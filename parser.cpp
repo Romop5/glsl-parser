@@ -316,7 +316,7 @@ void parser::cleanup()
 void parser::addGlobal(const char* name, int type, const char* typeName)
 {
     astGlobalVariable* global = GC_NEW(astVariable) astGlobalVariable();
-    global->storage = kIn;
+    global->storage = kOut;
     global->auxiliary = kCentroid;
     global->memory = kReadOnly | kWriteOnly; // random values
     global->precision = kHighp;
