@@ -53,6 +53,7 @@ struct parser {
     CHECK_RETURN astTU *parse(int type, bool ignoreUndefinedVariables = false);
 
     const char *error() const;
+    inline bool errorOccured() { return m_errorOccured; }
 
     void addGlobal(const char* name, int type, const char* typeName = "");
     void cleanup();
@@ -147,6 +148,7 @@ private:
     token m_token;
     vector<scope> m_scopes;
     vector<astBuiltin*> m_builtins;
+    bool m_errorOccured;
     char *m_error;
     char *m_oom;
     const char *m_fileName;

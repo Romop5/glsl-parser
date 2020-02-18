@@ -11,6 +11,7 @@ parser::parser(const char *source, const char *fileName)
 {
     m_ast = nullptr;
     m_oom = strnew("Out of memory");
+    m_errorOccured = false;
 }
 
 parser::~parser() {
@@ -278,6 +279,7 @@ void parser::fatal(const char *fmt, ...) {
 
     m_error = concat;
     m_strings.push_back(m_error);
+    m_errorOccured = true;
 }
 
 #undef TYPENAME
@@ -392,6 +394,8 @@ int parser::preprocess()
 
 /// The parser entry point
 CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
+
+    m_errorOccured = false;
 
     if (!ignoreUndefinedVariables)
         cleanup();
