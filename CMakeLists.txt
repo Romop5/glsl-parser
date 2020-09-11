@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 3.10)
+project(glsl-parser)
+
+option(GLSL_PARSER_BUILD_EXAMPLE_APP "Toggle whether to build an example GLSL parser executable"
+    OFF)
+
+# place binaries and libraries according to GNU standards
+include(GNUInstallDirs)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+
+
+set(glslParserSourceList 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/ast.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/debug.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/ast.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/util.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/lexemes.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/lexer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/util.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/debug.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/parser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/lexer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/glslParser/parser.h
+)
+
+add_library(glslParser SHARED
+    ${glslParserSourceList}
+)
+target_include_directories(glslParser PUBLIC $(CMAKE_CURRENT_SOURCE_DIR)/src)
+
+
+#------------------------------------------------------------------------------
+# Install glslParser lib
+#------------------------------------------------------------------------------
+install (TARGETS glslParser LIBRARY DESTINATION lib)
+
+set(glslIncludeFilesPrepare ${glslParserSourceList})
+list(FILTER glslIncludeFilesPrepare INCLUDE REGEX ".*h")
+
+install (FILES ${glslIncludeFilesPrepare} DESTINATION include/glslParser)
+
+#------------------------------------------------------------------------------
+# Add example application
+#------------------------------------------------------------------------------
+if(${GLSL_PARSER_BUILD_EXAMPLE_APP})
+    add_executable(glslParserFrontEnd
+        test/main.cpp
+    )
+    target_link_libraries(glslParserFrontEnd PRIVATE glslParser)
+endif()

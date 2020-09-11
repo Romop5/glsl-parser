@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "glslParser/ast.h"
 
 namespace glsl {
 
