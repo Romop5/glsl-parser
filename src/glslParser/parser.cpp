@@ -1,7 +1,7 @@
 #include <string.h> // strcmp, memcpy
 
-#include "glslParser/parser.h"
-#include "glslParser/util.h"
+#include "glslParser/parser.hpp"
+#include "glslParser/util.hpp"
 
 namespace glsl {
 
@@ -288,7 +288,7 @@ bool parser::isBuiltin() const {
     if (!isType(kType_keyword))
         return false;
     switch (m_token.asKeyword) {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
         return true;
     default:
         break;
@@ -430,7 +430,7 @@ CHECK_RETURN astTU *parser::parse(int type, bool ignoreUndefinedVariables) {
                 return 0;
         }
 
-        vector<topLevel> items;
+        std::vector<topLevel> items;
         if (!parseTopLevel(items))
             return 0;
         
@@ -639,7 +639,7 @@ static struct {
 };
 
 CHECK_RETURN bool parser::parseLayout(topLevel &current) {
-    vector<astLayoutQualifier*> &qualifiers = current.layoutQualifiers;
+    std::vector<astLayoutQualifier*> &qualifiers = current.layoutQualifiers;
     if (isKeyword(kKeyword_layout)) {
         if (!next()) // skip 'layout'
             return false;
@@ -710,7 +710,7 @@ CHECK_RETURN bool parser::parseLayout(topLevel &current) {
 }
 
 CHECK_RETURN bool parser::parseTopLevelItem(topLevel &level, topLevel *continuation) {
-    vector<topLevel> items;
+    std::vector<topLevel> items;
     while (!isBuiltin() && !isType(kType_identifier)) {
         // If this is an empty file don't get caught in this loop indefinitely
         token peek = m_lexer.peek();
@@ -905,7 +905,7 @@ CHECK_RETURN bool parser::parseTopLevelItem(topLevel &level, topLevel *continuat
     return true;
 }
 
-CHECK_RETURN bool parser::parseTopLevel(vector<topLevel> &items) {
+CHECK_RETURN bool parser::parseTopLevel(std::vector<topLevel> &items) {
     topLevel item;
     if (!parseTopLevelItem(item))
         return false;
@@ -940,7 +940,7 @@ CHECK_RETURN astStruct *parser::parseStruct() {
 
     if (!next()) return 0; // skip '{'
 
-    vector<topLevel> items;
+    std::vector<topLevel> items;
     while (!isType(kType_scope_end)) {
         if (!parseTopLevel(items))
             return 0;
@@ -1274,8 +1274,8 @@ CHECK_RETURN astSwitchStatement *parser::parseSwitchStatement() {
     if (!next()) // skip '{'
         return 0;
 
-    vector<int> seenInts;
-    vector<unsigned int> seenUInts;
+    std::vector<int> seenInts;
+    std::vector<unsigned int> seenUInts;
     bool hadDefault = false;
     while (!isType(kType_scope_end)) {
         astStatement *nextStatement = parseStatement();
@@ -1733,7 +1733,7 @@ astBuiltin *parser::parseBuiltin() {
     }
 
     switch (m_token.asKeyword) {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
         for (size_t i = 0; i < m_builtins.size(); i++) {
             if (m_builtins[i]->type == m_token.asKeyword) {
                 return m_builtins[i];

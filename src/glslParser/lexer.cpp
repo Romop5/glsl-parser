@@ -1,9 +1,10 @@
 #include <string.h> // memset, strlen
 #include <stdlib.h> // malloc, free
 #include <limits.h> // INT_MAX, UINT_MAX
+#include <assert.h>
 
-#include "glslParser/debug.h"
-#include "glslParser/lexer.h"
+#include "glslParser/debug.hpp"
+#include "glslParser/lexer.hpp"
 
 namespace glsl {
 
@@ -11,7 +12,7 @@ namespace glsl {
 #undef KEYWORD
 #define KEYWORD(X) { #X, kKeyword_##X },
 static const keywordInfo kKeywords[] = {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef KEYWORD
 #define KEYWORD(...)
@@ -20,7 +21,7 @@ static const keywordInfo kKeywords[] = {
 #undef OPERATOR
 #define OPERATOR(X, S, PREC) { #X, S, PREC },
 static const operatorInfo kOperators[] = {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef OPERATOR
 #define OPERATOR(...)
@@ -33,6 +34,51 @@ int token::precedence() const {
     if (m_type == kType_operator)
         return kOperators[asOperator].precedence;
     return -1;
+}
+
+int token::getType() const {
+    return m_type;
+}
+
+char * token::getAsIdentifier() const
+{
+    assert(m_type == kType_identifier);
+    return asIdentifier;
+}
+
+int token::getAsInt() const
+{
+    assert(m_type == kType_constant_int);
+    return asInt;
+}
+
+int token::getAsKeyword() const
+{
+    assert(m_type == kType_keyword);
+    return asKeyword;
+}
+
+int token::getAsOperator() const
+{
+    assert(m_type == kType_operator);
+    return asOperator;
+}
+
+unsigned token::getAsUnsigned() const
+{
+    assert(m_type == kType_constant_uint);
+    return asUnsigned;
+}
+float token::getAsFloat() const
+{
+    assert(m_type == kType_constant_float);
+    return asFloat;
+}
+
+double token::getAsDouble() const
+{
+    assert(m_type == kType_constant_double);
+    return asDouble;
 }
 
 /// location
@@ -121,12 +167,12 @@ void lexer::read(token &out) {
             }
         }
 
-        vector<char> numeric = readNumeric(isOctalish, isHexish);
+        std::vector<char> numeric = readNumeric(isOctalish, isHexish);
         if (position() != m_length && at() == '.') {
             isFloat = true;
             numeric.push_back('.');
             m_location.advanceColumn();
-            vector<char> others = readNumeric(isOctalish, isHexish);
+            std::vector<char> others = readNumeric(isOctalish, isHexish);
             numeric.reserve(numeric.size() + others.size());
             numeric.insert(numeric.end(), others.begin(), others.end());
         }
@@ -138,7 +184,7 @@ void lexer::read(token &out) {
                 numeric.push_back(ch1);
                 numeric.push_back(ch2);
                 m_location.advanceColumn(2);
-                vector<char> others = readNumeric(isOctalish, isHexish);
+                std::vector<char> others = readNumeric(isOctalish, isHexish);
                 numeric.reserve(numeric.size() + others.size());
                 numeric.insert(numeric.end(), others.begin(), others.end());
                 isFloat = true;
@@ -211,7 +257,7 @@ void lexer::read(token &out) {
     } else if (isChar(at()) || at() == '_') {
         // Identifiers
         out.m_type = kType_identifier;
-        vector<char> identifier;
+        std::vector<char> identifier;
         while (position() != m_length && (isChar(at()) || isDigit(at()) || at() == '_')) {
             identifier.push_back(at());
             m_location.advanceColumn();
@@ -446,8 +492,8 @@ void lexer::read(token &out) {
     }
 }
 
-vector<char> lexer::readNumeric(bool isOctalish, bool isHexish) {
-    vector<char> digits;
+std::vector<char> lexer::readNumeric(bool isOctalish, bool isHexish) {
+    std::vector<char> digits;
     if (isOctalish) {
         while (position() < m_length && isOctal(at())) {
             digits.push_back(at());
@@ -465,6 +511,13 @@ vector<char> lexer::readNumeric(bool isOctalish, bool isHexish) {
         }
     }
     return digits;
+}
+
+token lexer::read() {
+    token out;
+    // Return non-whitespace, non-comment token
+    read(out,true);
+    return out;
 }
 
 token lexer::peek() {

@@ -1,14 +1,14 @@
 #include <stdio.h>  // fread, fclose, fprintf, stderr
 #include <string.h> // strcmp, memcpy
 
-#include "glslParser/parser.h"
+#include "glslParser/parser.hpp"
 
 using namespace glsl;
 
 #undef KEYWORD
 #define KEYWORD(X) #X,
 static const char *kTypes[] = {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef KEYWORD
 #define KEYWORD(...)
@@ -16,7 +16,7 @@ static const char *kTypes[] = {
 #undef OPERATOR
 #define OPERATOR(N, S, P) S,
 static const char *kOperators[] = {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef OPERATOR
 #define OPERATOR(...)
@@ -65,7 +65,7 @@ static void printBoolConstant(astBoolConstant *expression) {
     print("%s", expression->value ? "true" : "false");
 }
 
-static void printArraySize(const vector<astConstantExpression*> &arraySizes) {
+static void printArraySize(const std::vector<astConstantExpression*> &arraySizes) {
     for (size_t i = 0; i < arraySizes.size(); i++) {
         print("[");
         printExpression(arraySizes[i]);
@@ -158,7 +158,7 @@ static void printPrecision(int precision) {
 }
 
 static void printGlobalVariable(astGlobalVariable *variable) {
-    vector<astLayoutQualifier*> &qualifiers = variable->layoutQualifiers;
+    std::vector<astLayoutQualifier*> &qualifiers = variable->layoutQualifiers;
     if (variable->layoutQualifiers.size()) {
         print("layout (");
         for (size_t i = 0; i < qualifiers.size(); i++) {
@@ -595,7 +595,7 @@ struct sourceFile {
 
 int main(int argc, char **argv) {
     int shaderType = -1;
-    vector<sourceFile> sources;
+    std::vector<sourceFile> sources;
     while (argc > 1) {
         ++argv;
         --argc;
@@ -640,7 +640,7 @@ int main(int argc, char **argv) {
     }
 
     for (size_t i = 0; i < sources.size(); i++) {
-        vector<char> contents;
+        std::vector<char> contents;
         // Read contents of file
         if (sources[i].file != stdin) {
             fseek(sources[i].file, 0, SEEK_END);

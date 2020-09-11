@@ -1,6 +1,6 @@
 #ifndef LEXER_HDR
 #define LEXER_HDR
-#include "glslParser/util.h"
+#include "glslParser/util.hpp"
 
 namespace glsl {
 
@@ -11,7 +11,7 @@ namespace glsl {
 // Types
 #define TYPE(X) kType_##X,
 enum {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef TYPE
 #define TYPE(...)
@@ -20,7 +20,7 @@ enum {
 #undef KEYWORD
 #define KEYWORD(X) kKeyword_##X,
 enum {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef KEYWORD
 #define KEYWORD(...)
@@ -29,7 +29,7 @@ enum {
 #undef OPERATOR
 #define OPERATOR(X, ...) kOperator_##X,
 enum {
-    #include "glslParser/lexemes.h"
+    #include "glslParser/lexemes.hpp"
 };
 #undef OPERATOR
 #define OPERATOR(...)
@@ -47,6 +47,15 @@ struct operatorInfo {
 
 struct token {
     int precedence() const;
+
+    int getType() const;
+    char * getAsIdentifier() const;
+    int getAsInt() const;
+    int getAsKeyword() const;
+    int getAsOperator() const;
+    unsigned getAsUnsigned() const;
+    float getAsFloat() const;
+    double getAsDouble() const;
 
 private:
     token();
@@ -99,7 +108,7 @@ protected:
     void read(token &out);
     void read(token &out, bool);
 
-    vector<char> readNumeric(bool isOctal, bool isHex);
+    std::vector<char> readNumeric(bool isOctal, bool isHex);
 
 private:
     const char *m_data;

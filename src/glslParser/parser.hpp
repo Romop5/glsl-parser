@@ -1,8 +1,8 @@
 #ifndef PARSE_HDR
 #define PARSE_HDR
 #include <string.h>
-#include "glslParser/lexer.h"
-#include "glslParser/ast.h"
+#include "glslParser/lexer.hpp"
+#include "glslParser/ast.hpp"
 
 namespace glsl {
 
@@ -37,10 +37,10 @@ struct topLevel {
     int interpolation;
     astType *type;
     astConstantExpression *initialValue;
-    vector<astConstantExpression*> arraySizes;
+    std::vector<astConstantExpression*> arraySizes;
     size_t arrayOnTypeOffset;
-    vector<astLayoutQualifier*> layoutQualifiers;
-    vector<astStruct*> structures;
+    std::vector<astLayoutQualifier*> layoutQualifiers;
+    std::vector<astStruct*> structures;
     bool isInvariant;
     bool isPrecise;
     bool isArray;
@@ -82,7 +82,7 @@ protected:
     CHECK_RETURN bool parseLayout(topLevel &current);
 
     CHECK_RETURN bool parseTopLevelItem(topLevel &level, topLevel *continuation = 0);
-    CHECK_RETURN bool parseTopLevel(vector<topLevel> &top);
+    CHECK_RETURN bool parseTopLevel(std::vector<topLevel> &top);
 
     CHECK_RETURN bool isType(int type) const;
     CHECK_RETURN bool isKeyword(int keyword) const;
@@ -138,7 +138,7 @@ protected:
     astVariable *findVariable(const char *identifier);
     astType* getType(astExpression *expression);
 private:
-    typedef vector<astVariable *> scope;
+    typedef std::vector<astVariable *> scope;
 
     scope m_toAddGlobal;
     void m_addBuiltinVariables();
@@ -146,8 +146,8 @@ private:
     astTU *m_ast;
     lexer m_lexer;
     token m_token;
-    vector<scope> m_scopes;
-    vector<astBuiltin*> m_builtins;
+    std::vector<scope> m_scopes;
+    std::vector<astBuiltin*> m_builtins;
     bool m_errorOccured;
     char *m_error;
     char *m_oom;
@@ -174,8 +174,8 @@ private:
         return !what || !*what;
     }
 
-    vector<astMemory> m_memory; // Memory of AST held here
-    vector<char *> m_strings; // Memory of strings held here
+    std::vector<astMemory> m_memory; // Memory of AST held here
+    std::vector<char *> m_strings; // Memory of strings held here
 };
 
 }
