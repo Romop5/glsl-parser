@@ -46,9 +46,15 @@ install (FILES ${glslIncludeFilesPrepare} DESTINATION include/glslParser)
 #------------------------------------------------------------------------------
 if(${GLSL_PARSER_BUILD_EXAMPLE_APP})
     add_executable(glslParserFrontEnd
-        test/main.cpp
+        apps/parser.cpp
     )
     target_link_libraries(glslParserFrontEnd PRIVATE glslParser)
+
+    add_executable(dotprinter
+        apps/dotprinter.cpp
+    )
+    target_link_libraries(dotprinter PRIVATE glslParser)
+
 endif()
 
 #------------------------------------------------------------------------------
